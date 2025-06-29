@@ -107,3 +107,44 @@ export const updateProfile = async (req, res) => {
     });
   }
 };
+//send messager to dselected user
+export const sendMessage = async (req, res) => {
+  try {
+    const {  text,image } = req.body;
+    const sender = req.user._id;
+    const receiver = req.params.id;
+    let imageUrl = null;
+    if (image) {
+      const upload = await cloudinary.uploader.upload(image);
+      imageUrl = upload.secure_url;
+    }
+    const newMessage = await Message.create({
+      sender,
+      receiver,
+      text,
+      image: imageUrl,
+    });
+
+    if (!receiver || !text) {
+      return res.json({
+        success: false,
+        message: "Please fill all the fields",
+      });
+    }
+
+     
+
+    res.json({
+      success: true,
+      message: newMessage,
+      message: "Message sent successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
