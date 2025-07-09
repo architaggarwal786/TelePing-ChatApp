@@ -1,6 +1,6 @@
 //Middleware for authentication
 
-import User from "../models/User";
+import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
 export const protectRoute = async (req, res, next) => {
