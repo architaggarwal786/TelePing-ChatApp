@@ -1,6 +1,7 @@
 import User from '../models/userModel.js';
 import Message from '../models/messageModel.js';
 import { io,userSocketMap } from '../server.js';
+import cloudinary from '../lib/cloudinary.js';
 
 //get all usrs except the logged in user
 
@@ -94,3 +95,41 @@ export const markMessagesAsSeen = async (req, res) => {
       message: "Something went wrong",
       error: error.message})
     }}
+
+    //Send message to selected user
+export const sendMessage = async (req, res) => {
+try {
+  const{text,image}=req.body;
+  const receiverId = req.params.id;
+  const senderId = req.user._id;
+  let imageURL;
+  if (image) {
+    const uploadResponse = await cloudinary.uploader.upload(image) 
+      imageURL= uploadResponse.secure_url;
+}
+    const newMessage = await Message.create({
+      text,
+      image: imageURL,
+      sender: senderId,
+      receiver: receiverId
+    });
+    //emit the new message to the sender and receiver
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+res.json({
+  success: true,
+  message: newMessage
+});
+
+  
+} catch (error) {
+  console.log(error.message);
+  req.json({
+    success: false,
+    message: "Something went wrong",
+    error: error.message
+  });
+}
+}
